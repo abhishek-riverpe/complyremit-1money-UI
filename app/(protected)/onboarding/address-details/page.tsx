@@ -113,7 +113,7 @@ export default function AddressDetailsPage() {
             <ArrowLeft className="w-4 h-4 mr-1.5" />
             Back
           </Button>
-          <Button type="submit" size="lg">
+          <Button type="submit" size="lg" className="bg-green-400 hover:bg-green-500 text-white">
             Continue to Terms of Service
           </Button>
         </div>

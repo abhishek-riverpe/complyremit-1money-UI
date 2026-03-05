@@ -185,7 +185,7 @@ export default function TosReviewPage() {
           <ArrowLeft className="w-4 h-4 mr-1.5" />
           Back
         </Button>
-        <Button size="lg" onClick={handleSignTos} disabled={loading}>
+        <Button size="lg" onClick={handleSignTos} disabled={loading} className="bg-green-400 hover:bg-green-500 text-white">
           {loading ? (
             <>
               <Loader2 className="w-4 h-4 mr-1.5 animate-spin" />

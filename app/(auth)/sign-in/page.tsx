@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useAuth } from "@/components/providers/auth-provider";
@@ -21,8 +21,14 @@ export default function SignInPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
-  const { signIn } = useAuth();
+  const { signIn, isSignedIn, isLoaded } = useAuth();
   const router = useRouter();
+
+  useEffect(() => {
+    if (isLoaded && isSignedIn) {
+      router.replace("/dashboard");
+    }
+  }, [isLoaded, isSignedIn, router]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -33,7 +39,7 @@ export default function SignInPage() {
     setLoading(true);
     try {
       await signIn(email, password);
-      router.push("/onboarding/business-details");
+      router.push("/dashboard");
     } catch {
       toast.error("Sign in failed");
     } finally {
@@ -41,9 +47,16 @@ export default function SignInPage() {
     }
   };
 
+  if (!isLoaded || isSignedIn) return null;
+
   return (
     <Card>
       <CardHeader className="text-center">
+        <div className="flex justify-center mb-2">
+          <div className="w-10 h-10 rounded-full bg-green-400 flex items-center justify-center">
+            <span className="text-white font-bold text-lg">C</span>
+          </div>
+        </div>
         <CardTitle className="text-2xl font-bold">ComplyRemit</CardTitle>
         <CardDescription>Sign in to your account</CardDescription>
       </CardHeader>
@@ -73,12 +86,16 @@ export default function SignInPage() {
           </div>
         </CardContent>
         <CardFooter className="flex flex-col gap-3">
-          <Button type="submit" className="w-full" disabled={loading}>
+          <Button
+            type="submit"
+            className="w-full bg-green-400 hover:bg-green-500 text-white"
+            disabled={loading}
+          >
             {loading ? "Signing in..." : "Sign In"}
           </Button>
           <p className="text-sm text-muted-foreground">
             Don&apos;t have an account?{" "}
-            <Link href="/sign-up" className="text-primary underline">
+            <Link href="/sign-up" className="text-green-500 underline">
               Sign up
             </Link>
           </p>

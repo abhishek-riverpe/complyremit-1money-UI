@@ -511,7 +511,7 @@ export default function BusinessDetailsPage() {
         </Card>
 
         <div className="flex justify-end">
-          <Button type="submit" size="lg">
+          <Button type="submit" size="lg" className="bg-green-400 hover:bg-green-500 text-white">
             Continue to Address Details
           </Button>
         </div>
