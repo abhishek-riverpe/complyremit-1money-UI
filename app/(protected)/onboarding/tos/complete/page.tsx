@@ -55,8 +55,8 @@ function CompleteContent() {
 
   return (
     <div className="flex flex-col items-center justify-center py-24 gap-4">
-      <Loader2 className="w-8 h-8 animate-spin text-green-500" />
-      <p className="text-muted-foreground">
+      <Loader2 className="w-8 h-8 animate-spin text-emerald-500" />
+      <p className="text-slate-500 dark:text-slate-400">
         Creating your account, please wait...
       </p>
     </div>

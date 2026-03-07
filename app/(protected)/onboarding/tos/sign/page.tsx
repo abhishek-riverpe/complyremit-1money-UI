@@ -28,7 +28,7 @@ function TosSignContent() {
     <div className="space-y-6">
       <div>
         <h2 className="text-xl font-semibold">Terms of Service</h2>
-        <p className="text-sm text-muted-foreground mt-1">
+        <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
           Please read and agree to the terms below.
         </p>
       </div>
@@ -40,7 +40,7 @@ function TosSignContent() {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="h-64 overflow-y-auto rounded border p-4 text-sm text-muted-foreground space-y-3 bg-muted/20">
+          <div className="h-64 overflow-y-auto rounded border p-4 text-sm text-slate-500 dark:text-slate-400 space-y-3 bg-slate-50 dark:bg-slate-800/50">
             <p>
               <strong>1. Services.</strong> ComplyRemit provides business
               onboarding, compliance verification, and payment facilitation
@@ -112,7 +112,7 @@ function TosSignContent() {
       </label>
 
       <div className="flex justify-end">
-        <Button size="lg" onClick={handleSign} disabled={!agreed || loading} className="bg-green-400 hover:bg-green-500 text-white">
+        <Button size="lg" onClick={handleSign} disabled={!agreed || loading} className="bg-emerald-500 hover:bg-emerald-600 text-white">
           {loading ? (
             <>
               <Loader2 className="w-4 h-4 mr-1.5 animate-spin" />

@@ -53,7 +53,7 @@ export default function SignUpPage() {
     <Card>
       <CardHeader className="text-center">
         <div className="flex justify-center mb-2">
-          <div className="w-10 h-10 rounded-full bg-green-400 flex items-center justify-center">
+          <div className="w-10 h-10 rounded-full bg-emerald-500 shadow-sm flex items-center justify-center">
             <span className="text-white font-bold text-lg">C</span>
           </div>
         </div>
@@ -88,14 +88,14 @@ export default function SignUpPage() {
         <CardFooter className="flex flex-col gap-3">
           <Button
             type="submit"
-            className="w-full bg-green-400 hover:bg-green-500 text-white"
+            className="w-full bg-emerald-500 hover:bg-emerald-600 text-white"
             disabled={loading}
           >
             {loading ? "Creating account..." : "Create Account"}
           </Button>
-          <p className="text-sm text-muted-foreground">
+          <p className="text-sm text-slate-500 dark:text-slate-400">
             Already have an account?{" "}
-            <Link href="/sign-in" className="text-green-500 underline">
+            <Link href="/sign-in" className="text-emerald-500 underline">
               Sign in
             </Link>
           </p>

@@ -28,8 +28,8 @@ export function ThemeToggle() {
           className={cn(
             "flex flex-col items-center gap-2 rounded-lg border-2 p-4 transition-colors cursor-pointer",
             theme === value
-              ? "border-green-400 bg-green-50 dark:bg-green-400/10"
-              : "border-transparent bg-muted hover:bg-muted/80"
+              ? "border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20"
+              : "border-transparent bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700"
           )}
         >
           <Icon className="w-5 h-5" />

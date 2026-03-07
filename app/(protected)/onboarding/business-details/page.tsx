@@ -468,7 +468,7 @@ export default function BusinessDetailsPage() {
           </CardHeader>
           <CardContent className="space-y-4">
             {docFields.length === 0 && (
-              <p className="text-sm text-muted-foreground">
+              <p className="text-sm text-slate-500 dark:text-slate-400">
                 No documents added yet. Click &quot;Add Document&quot; to
                 upload supporting documents.
               </p>
@@ -511,7 +511,7 @@ export default function BusinessDetailsPage() {
         </Card>
 
         <div className="flex justify-end">
-          <Button type="submit" size="lg" className="bg-green-400 hover:bg-green-500 text-white">
+          <Button type="submit" size="lg" className="bg-emerald-500 hover:bg-emerald-600 text-white">
             Continue to Address Details
           </Button>
         </div>

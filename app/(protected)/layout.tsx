@@ -11,11 +11,11 @@ function Header() {
   const { user, signOut } = useAuth();
 
   return (
-    <header className="border-b bg-background">
+    <header className="border-b bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800">
       <div className="max-w-4xl mx-auto flex items-center justify-between px-4 h-14">
-        <span className="font-bold text-lg tracking-tight">ComplyRemit</span>
+        <span className="font-bold text-lg tracking-tight text-slate-800 dark:text-slate-100">ComplyRemit</span>
         <div className="flex items-center gap-3">
-          <span className="text-sm text-muted-foreground hidden sm:block">
+          <span className="text-sm text-slate-500 dark:text-slate-400 hidden sm:block">
             {user?.email}
           </span>
           <Button variant="ghost" size="sm" onClick={signOut}>
@@ -32,7 +32,7 @@ export default function ProtectedLayout({ children }: { children: ReactNode }) {
   return (
     <ProtectedRoute>
       <OnboardingProvider>
-        <div className="min-h-screen bg-muted/30">
+        <div className="min-h-screen bg-slate-50 dark:bg-slate-950">
           <Header />
           <main className="max-w-4xl mx-auto px-4 py-6">{children}</main>
         </div>

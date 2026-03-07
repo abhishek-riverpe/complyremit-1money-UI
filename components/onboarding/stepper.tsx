@@ -25,13 +25,13 @@ export function Stepper({ currentStep, completedSteps }: StepperProps) {
                 className={cn(
                   "flex items-center justify-center w-9 h-9 rounded-full border-2 text-sm font-medium transition-colors",
                   isCompleted &&
-                    "bg-green-500 border-green-500 text-white",
+                    "bg-emerald-500 border-emerald-500 text-white",
                   isActive &&
                     !isCompleted &&
-                    "border-green-500 text-green-600 bg-green-50",
+                    "border-emerald-500 text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/20",
                   !isActive &&
                     !isCompleted &&
-                    "border-muted-foreground/30 text-muted-foreground"
+                    "border-slate-300 dark:border-slate-600 text-slate-400 dark:text-slate-500"
                 )}
               >
                 {isCompleted ? (
@@ -43,9 +43,9 @@ export function Stepper({ currentStep, completedSteps }: StepperProps) {
               <span
                 className={cn(
                   "text-xs font-medium hidden sm:block",
-                  isActive && "text-green-600",
-                  isCompleted && "text-green-600",
-                  !isActive && !isCompleted && "text-muted-foreground"
+                  isActive && "text-emerald-600 dark:text-emerald-400",
+                  isCompleted && "text-emerald-600 dark:text-emerald-400",
+                  !isActive && !isCompleted && "text-slate-400 dark:text-slate-500"
                 )}
               >
                 {step.label}
@@ -55,7 +55,7 @@ export function Stepper({ currentStep, completedSteps }: StepperProps) {
               <div
                 className={cn(
                   "flex-1 h-0.5 mx-3 mt-[-1.25rem] sm:mt-[-0.5rem]",
-                  isCompleted ? "bg-green-500" : "bg-muted-foreground/20"
+                  isCompleted ? "bg-emerald-500" : "bg-slate-200 dark:bg-slate-700"
                 )}
               />
             )}

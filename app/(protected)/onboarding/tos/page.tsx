@@ -54,7 +54,7 @@ export default function TosReviewPage() {
     <div className="space-y-6">
       <div>
         <h2 className="text-xl font-semibold">Review Your Information</h2>
-        <p className="text-sm text-muted-foreground mt-1">
+        <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
           Please review all details before signing the Terms of Service.
         </p>
       </div>
@@ -141,20 +141,20 @@ export default function TosReviewPage() {
                   <Badge variant="secondary">Director</Badge>
                 )}
               </div>
-              <p className="text-sm text-muted-foreground">{person.email}</p>
+              <p className="text-sm text-slate-500 dark:text-slate-400">{person.email}</p>
               {person.has_ownership && person.ownership_percentage !== undefined && (
-                <p className="text-sm text-muted-foreground">
+                <p className="text-sm text-slate-500 dark:text-slate-400">
                   Ownership: {person.ownership_percentage}%
                 </p>
               )}
-              <p className="text-sm text-muted-foreground">
+              <p className="text-sm text-slate-500 dark:text-slate-400">
                 Tax: {person.tax_type} — {person.tax_id} ({person.country_of_tax})
               </p>
-              <p className="text-sm text-muted-foreground">
+              <p className="text-sm text-slate-500 dark:text-slate-400">
                 IDs: {person.identifying_information.length}
               </p>
               {person.poa && (
-                <p className="text-sm text-muted-foreground">
+                <p className="text-sm text-slate-500 dark:text-slate-400">
                   POA: {person.poa_type || "Uploaded"}
                 </p>
               )}
@@ -171,7 +171,7 @@ export default function TosReviewPage() {
           </CardHeader>
           <CardContent className="space-y-1 text-sm">
             {businessDetails.documents.map((doc, i) => (
-              <p key={i} className="text-muted-foreground">
+              <p key={i} className="text-slate-500 dark:text-slate-400">
                 {doc.doc_type.replace(/_/g, " ")}
                 {doc.description && ` — ${doc.description}`}
               </p>
@@ -185,7 +185,7 @@ export default function TosReviewPage() {
           <ArrowLeft className="w-4 h-4 mr-1.5" />
           Back
         </Button>
-        <Button size="lg" onClick={handleSignTos} disabled={loading} className="bg-green-400 hover:bg-green-500 text-white">
+        <Button size="lg" onClick={handleSignTos} disabled={loading} className="bg-emerald-500 hover:bg-emerald-600 text-white">
           {loading ? (
             <>
               <Loader2 className="w-4 h-4 mr-1.5 animate-spin" />
@@ -206,7 +206,7 @@ export default function TosReviewPage() {
 function Row({ label, value }: { label: string; value: string }) {
   return (
     <div className="flex justify-between">
-      <span className="text-muted-foreground">{label}</span>
+      <span className="text-slate-500 dark:text-slate-400">{label}</span>
       <span className="font-medium text-right max-w-[60%] truncate">
         {value}
       </span>
