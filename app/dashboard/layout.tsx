@@ -39,7 +39,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
     const meta = PAGE_META[pathname] ?? { title: "Dashboard", subtitle: "" };
     const email = user?.emailAddresses[0]?.emailAddress;
     const name = email
-      ? email.split("@")[0].charAt(0).toUpperCase() + email.split("@")[0].slice(1)
+      ? email.split("@")[0].charAt(0) + email.split("@")[0].slice(1)
       : "User";
     if (pathname === "/dashboard") {
       return { title: meta.title, subtitle: `Welcome back, ${name}. ${meta.subtitle}` };

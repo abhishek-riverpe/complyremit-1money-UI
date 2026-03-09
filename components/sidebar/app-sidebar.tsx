@@ -32,7 +32,7 @@ export function AppSidebar() {
   const clerk = useClerk();
   const email = user?.emailAddresses[0]?.emailAddress;
   const displayName = email
-    ? email.split("@")[0].charAt(0).toUpperCase() + email.split("@")[0].slice(1)
+    ? email.split("@")[0].charAt(0) + email.split("@")[0].slice(1)
     : "User";
 
   return (
