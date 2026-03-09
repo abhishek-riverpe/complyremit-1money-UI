@@ -19,7 +19,7 @@ import type {
 const STORAGE_KEY = "complyremit_onboarding";
 
 const initialState: OnboardingState = {
-  currentStep: "business-details",
+  currentStep: "tos",
   businessDetails: null,
   addressDetails: null,
   signedAgreementId: null,
@@ -47,12 +47,15 @@ function reducer(state: OnboardingState, action: Action): OnboardingState {
       return {
         ...state,
         addressDetails: action.payload,
-        currentStep: "tos",
       };
     case "SET_STEP":
       return { ...state, currentStep: action.payload };
     case "SET_SIGNED_AGREEMENT":
-      return { ...state, signedAgreementId: action.payload };
+      return {
+        ...state,
+        signedAgreementId: action.payload,
+        currentStep: "business-details",
+      };
     case "SET_COMPLETE":
       return { ...state, isComplete: true };
     case "HYDRATE":

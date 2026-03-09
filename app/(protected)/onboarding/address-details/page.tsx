@@ -64,7 +64,7 @@ export default function AddressDetailsPage() {
 
   const onSubmit = (data: AddressDetailsFormValues) => {
     setAddressDetails(data);
-    router.push("/onboarding/tos");
+    router.push("/onboarding/complete");
   };
 
   const handleBack = () => {
@@ -108,13 +108,13 @@ export default function AddressDetailsPage() {
           </Card>
         ))}
 
-        <div className="flex justify-between">
+        <div className="flex justify-between gap-3">
           <Button type="button" variant="outline" onClick={handleBack}>
             <ArrowLeft className="w-4 h-4 mr-1.5" />
             Back
           </Button>
-          <Button type="submit" size="lg" className="bg-emerald-500 hover:bg-emerald-600 text-white">
-            Continue to Terms of Service
+          <Button type="submit" size="lg">
+            Complete Onboarding
           </Button>
         </div>
       </form>

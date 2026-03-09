@@ -2,214 +2,91 @@
 
 import { useOnboarding } from "@/components/providers/onboarding-provider";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { createUser } from "@/services/user.service";
+import { createTosLink, signTos } from "@/services/tos.service";
+import { Loader2, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
-import { ArrowLeft, FileText, Loader2 } from "lucide-react";
 
-export default function TosReviewPage() {
-  const { state, setStep, isHydrated } = useOnboarding();
+export default function TosPage() {
+  const { state, isHydrated, setSignedAgreement } = useOnboarding();
   const router = useRouter();
-  const [loading, setLoading] = useState(false);
+  const hasRun = useRef(false);
+  const [error, setError] = useState<string | null>(null);
 
-  // Guard: both steps must be complete
   useEffect(() => {
-    if (isHydrated && !state.businessDetails) {
+    if (!isHydrated || hasRun.current) return;
+
+    if (state.signedAgreementId) {
       router.replace("/onboarding/business-details");
-    } else if (isHydrated && !state.addressDetails) {
-      router.replace("/onboarding/address-details");
+      return;
     }
-  }, [isHydrated, state.businessDetails, state.addressDetails, router]);
 
-  if (!state.businessDetails || !state.addressDetails) return null;
+    hasRun.current = true;
 
-  const { businessDetails, addressDetails } = state;
+    async function initTos() {
+      try {
+        // Create user in backend (409 = already exists, that's fine)
+        try {
+          await createUser();
+        } catch (err) {
+          const message = err instanceof Error ? err.message : "";
+          if (!message.includes("already exists") && !message.includes("409")) {
+            throw err;
+          }
+        }
 
-  const handleSignTos = async () => {
-    setLoading(true);
-    try {
-      const res = await fetch("/api/mock/generate-tos-url", {
-        method: "POST",
-      });
-      const data = await res.json();
-      router.push(data.signing_url);
-    } catch {
-      setLoading(false);
+        // Create TOS link to get session token
+        const callbackUrl = window.location.origin + "/onboarding/tos/callback";
+        const { session_token } = await createTosLink(callbackUrl);
+        console.log("[TOS] Session token:", session_token);
+
+        // Sign TOS directly (skip hosted page)
+        const { signed_agreement_id } = await signTos(session_token);
+        console.log("[TOS] Signed agreement ID:", signed_agreement_id);
+
+        // Store agreement and navigate to next step
+        setSignedAgreement(signed_agreement_id);
+        router.replace("/onboarding/business-details");
+      } catch (err) {
+        console.error("[TOS] Error during TOS initialization:", err);
+        const message = err instanceof Error ? err.message : String(err);
+        const isApiError = message.includes("fetch") || message.includes("network") || message.includes("500") || message.includes("502");
+        setError(
+          isApiError
+            ? `Backend API error: ${message}`
+            : `Failed to initialize TOS: ${message}`
+        );
+      }
     }
-  };
 
-  const handleBack = () => {
-    setStep("address-details");
-    router.push("/onboarding/address-details");
-  };
+    initTos();
+  }, [isHydrated, state.signedAgreementId, router]);
 
-  return (
-    <div className="space-y-6">
-      <div>
-        <h2 className="text-xl font-semibold">Review Your Information</h2>
-        <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
-          Please review all details before signing the Terms of Service.
-        </p>
-      </div>
-
-      {/* Business Summary */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base">Business Information</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-2 text-sm">
-          <Row label="Legal Name" value={businessDetails.business_legal_name} />
-          <Row label="Email" value={businessDetails.email} />
-          <Row label="Business Type" value={businessDetails.business_type} />
-          <Row label="Industry" value={businessDetails.business_industry} />
-          <Row
-            label="Incorporation"
-            value={businessDetails.date_of_incorporation}
-          />
-          <Row
-            label="Registration Number"
-            value={businessDetails.business_registration_number}
-          />
-          {businessDetails.primary_website && (
-            <Row label="Website" value={businessDetails.primary_website} />
-          )}
-        </CardContent>
-      </Card>
-
-      {/* Financial Summary */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base">Financial Details</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-2 text-sm">
-          <Row label="Account Purpose" value={businessDetails.account_purpose} />
-          <Row
-            label="Annual Revenue"
-            value={businessDetails.estimated_annual_revenue_usd}
-          />
-          <Row label="Tax ID" value={businessDetails.tax_id} />
-          <Row label="Tax Type" value={businessDetails.tax_type} />
-        </CardContent>
-      </Card>
-
-      {/* Address Summary */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base">Registered Address</CardTitle>
-        </CardHeader>
-        <CardContent className="text-sm">
-          <p>{addressDetails.registered_address.street_line_1}</p>
-          {addressDetails.registered_address.street_line_2 && (
-            <p>{addressDetails.registered_address.street_line_2}</p>
-          )}
-          <p>
-            {addressDetails.registered_address.city},{" "}
-            {addressDetails.registered_address.state}{" "}
-            {addressDetails.registered_address.postal_code}
-          </p>
-          {addressDetails.registered_address.subdivision && (
-            <p>{addressDetails.registered_address.subdivision}</p>
-          )}
-          <p>{addressDetails.registered_address.country}</p>
-        </CardContent>
-      </Card>
-
-      {/* People Summary */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base">Associated Persons</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-3">
-          {businessDetails.associated_persons.map((person, i) => (
-            <div key={i}>
-              {i > 0 && <Separator className="mb-3" />}
-              <div className="flex items-center gap-2 mb-1">
-                <span className="font-medium text-sm">
-                  {person.first_name} {person.last_name}
-                </span>
-                {person.is_signer && (
-                  <Badge variant="secondary">Signer</Badge>
-                )}
-                {person.is_director && (
-                  <Badge variant="secondary">Director</Badge>
-                )}
-              </div>
-              <p className="text-sm text-slate-500 dark:text-slate-400">{person.email}</p>
-              {person.has_ownership && person.ownership_percentage !== undefined && (
-                <p className="text-sm text-slate-500 dark:text-slate-400">
-                  Ownership: {person.ownership_percentage}%
-                </p>
-              )}
-              <p className="text-sm text-slate-500 dark:text-slate-400">
-                Tax: {person.tax_type} — {person.tax_id} ({person.country_of_tax})
-              </p>
-              <p className="text-sm text-slate-500 dark:text-slate-400">
-                IDs: {person.identifying_information.length}
-              </p>
-              {person.poa && (
-                <p className="text-sm text-slate-500 dark:text-slate-400">
-                  POA: {person.poa_type || "Uploaded"}
-                </p>
-              )}
-            </div>
-          ))}
-        </CardContent>
-      </Card>
-
-      {/* Documents Summary */}
-      {businessDetails.documents.length > 0 && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base">Documents</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-1 text-sm">
-            {businessDetails.documents.map((doc, i) => (
-              <p key={i} className="text-slate-500 dark:text-slate-400">
-                {doc.doc_type.replace(/_/g, " ")}
-                {doc.description && ` — ${doc.description}`}
-              </p>
-            ))}
-          </CardContent>
-        </Card>
-      )}
-
-      <div className="flex justify-between">
-        <Button type="button" variant="outline" onClick={handleBack}>
-          <ArrowLeft className="w-4 h-4 mr-1.5" />
-          Back
-        </Button>
-        <Button size="lg" onClick={handleSignTos} disabled={loading} className="bg-emerald-500 hover:bg-emerald-600 text-white">
-          {loading ? (
-            <>
-              <Loader2 className="w-4 h-4 mr-1.5 animate-spin" />
-              Preparing...
-            </>
-          ) : (
-            <>
-              <FileText className="w-4 h-4 mr-1.5" />
-              Sign Terms of Service
-            </>
-          )}
+  if (error) {
+    return (
+      <div className="flex flex-col items-center justify-center py-12 sm:py-24 gap-4">
+        <AlertCircle className="w-8 h-8 text-destructive" />
+        <p className="text-destructive">{error}</p>
+        <Button
+          onClick={() => {
+            setError(null);
+            hasRun.current = false;
+          }}
+          className="bg-brand hover:bg-brand/90 text-brand-foreground"
+        >
+          Retry
         </Button>
       </div>
-    </div>
-  );
-}
+    );
+  }
 
-function Row({ label, value }: { label: string; value: string }) {
   return (
-    <div className="flex justify-between">
-      <span className="text-slate-500 dark:text-slate-400">{label}</span>
-      <span className="font-medium text-right max-w-[60%] truncate">
-        {value}
-      </span>
+    <div className="flex flex-col items-center justify-center py-12 sm:py-24 gap-4">
+      <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      <p className="text-muted-foreground">
+        Signing Terms of Service, please wait...
+      </p>
     </div>
   );
 }

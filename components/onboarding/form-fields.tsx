@@ -5,6 +5,7 @@ import {
   FormItem,
   FormLabel,
   FormControl,
+  FormDescription,
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
@@ -21,11 +22,14 @@ import type { Control, FieldValues, Path } from "react-hook-form";
 import { useCallback, useRef, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { ChevronDown, X } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 interface BaseFieldProps<T extends FieldValues> {
   control: Control<T>;
   name: Path<T>;
   label: string;
+  className?: string;
+  description?: string;
 }
 
 interface TextFormFieldProps<T extends FieldValues> extends BaseFieldProps<T> {
@@ -39,17 +43,27 @@ export function TextFormField<T extends FieldValues>({
   label,
   type = "text",
   placeholder,
+  className,
+  description,
 }: TextFormFieldProps<T>) {
   return (
     <FormField
       control={control}
       name={name}
       render={({ field }) => (
-        <FormItem>
+        <FormItem className={className}>
           <FormLabel>{label}</FormLabel>
           <FormControl>
-            <Input type={type} placeholder={placeholder} {...field} />
+            <Input
+              type={type}
+              placeholder={placeholder}
+              {...field}
+              onChange={(e) => {
+                field.onChange(type === "number" ? (e.target.value === "" ? "" : e.target.valueAsNumber) : e.target.value);
+              }}
+            />
           </FormControl>
+          {description && <FormDescription>{description}</FormDescription>}
           <FormMessage />
         </FormItem>
       )}
@@ -61,6 +75,7 @@ interface SelectFormFieldProps<T extends FieldValues>
   extends BaseFieldProps<T> {
   options: readonly { value: string; label: string }[];
   placeholder?: string;
+  disabled?: boolean;
 }
 
 export function SelectFormField<T extends FieldValues>({
@@ -69,15 +84,18 @@ export function SelectFormField<T extends FieldValues>({
   label,
   options,
   placeholder,
+  disabled,
+  className,
+  description,
 }: SelectFormFieldProps<T>) {
   return (
     <FormField
       control={control}
       name={name}
       render={({ field }) => (
-        <FormItem>
+        <FormItem className={className}>
           <FormLabel>{label}</FormLabel>
-          <Select onValueChange={field.onChange} value={field.value}>
+          <Select onValueChange={field.onChange} value={field.value} disabled={disabled}>
             <FormControl>
               <SelectTrigger>
                 <SelectValue placeholder={placeholder || `Select ${label.toLowerCase()}`} />
@@ -91,6 +109,7 @@ export function SelectFormField<T extends FieldValues>({
               ))}
             </SelectContent>
           </Select>
+          {description && <FormDescription>{description}</FormDescription>}
           <FormMessage />
         </FormItem>
       )}
@@ -110,17 +129,20 @@ export function TextareaFormField<T extends FieldValues>({
   label,
   placeholder,
   rows = 3,
+  className,
+  description,
 }: TextareaFormFieldProps<T>) {
   return (
     <FormField
       control={control}
       name={name}
       render={({ field }) => (
-        <FormItem>
+        <FormItem className={className}>
           <FormLabel>{label}</FormLabel>
           <FormControl>
             <Textarea placeholder={placeholder} rows={rows} {...field} />
           </FormControl>
+          {description && <FormDescription>{description}</FormDescription>}
           <FormMessage />
         </FormItem>
       )}
@@ -140,6 +162,8 @@ export function MultiSelectFormField<T extends FieldValues>({
   label,
   options,
   placeholder,
+  className,
+  description,
 }: MultiSelectFormFieldProps<T>) {
   const [open, setOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -155,15 +179,15 @@ export function MultiSelectFormField<T extends FieldValues>({
           .filter(Boolean);
 
         return (
-          <FormItem>
+          <FormItem className={className}>
             <FormLabel>{label}</FormLabel>
             <div className="relative" ref={containerRef}>
               <button
                 type="button"
                 onClick={() => setOpen((prev) => !prev)}
-                className="flex w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 min-h-10"
+                className="flex w-full items-center justify-between gap-2 rounded-md border border-input bg-transparent px-3 py-2 text-sm whitespace-nowrap shadow-xs transition-[color,box-shadow] outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 min-h-9 dark:bg-input/30 dark:hover:bg-input/50"
               >
-                <span className="flex flex-wrap gap-1 flex-1 text-left">
+                <span className="flex flex-wrap gap-1 flex-1 text-left whitespace-normal">
                   {selectedLabels.length > 0 ? (
                     selectedLabels.map((lbl, i) => (
                       <Badge
@@ -205,12 +229,11 @@ export function MultiSelectFormField<T extends FieldValues>({
               </button>
               {open && (
                 <>
-                  {/* backdrop to close on outside click */}
                   <div
                     className="fixed inset-0 z-40"
                     onClick={() => setOpen(false)}
                   />
-                  <div className="absolute z-50 mt-1 w-full rounded-md border bg-popover shadow-md max-h-60 overflow-auto">
+                  <div className="absolute z-50 mt-1 w-full rounded-md border bg-popover text-popover-foreground shadow-md max-h-60 overflow-auto">
                     {options.map((option) => {
                       const checked = values.includes(option.value);
                       return (
@@ -240,6 +263,7 @@ export function MultiSelectFormField<T extends FieldValues>({
                 </>
               )}
             </div>
+            {description && <FormDescription>{description}</FormDescription>}
             <FormMessage />
           </FormItem>
         );
@@ -248,20 +272,21 @@ export function MultiSelectFormField<T extends FieldValues>({
   );
 }
 
-interface SwitchFormFieldProps<T extends FieldValues>
-  extends BaseFieldProps<T> {}
+type CheckboxFormFieldProps<T extends FieldValues> = BaseFieldProps<T>;
 
-export function SwitchFormField<T extends FieldValues>({
+export function CheckboxFormField<T extends FieldValues>({
   control,
   name,
   label,
-}: SwitchFormFieldProps<T>) {
+  className,
+  description,
+}: CheckboxFormFieldProps<T>) {
   return (
     <FormField
       control={control}
       name={name}
       render={({ field }) => (
-        <FormItem className="flex items-center gap-2 space-y-0">
+        <FormItem className={cn("flex items-center gap-2 space-y-0", className)}>
           <FormControl>
             <Checkbox
               checked={field.value}
@@ -269,6 +294,7 @@ export function SwitchFormField<T extends FieldValues>({
             />
           </FormControl>
           <FormLabel className="font-normal">{label}</FormLabel>
+          {description && <FormDescription>{description}</FormDescription>}
           <FormMessage />
         </FormItem>
       )}
@@ -276,9 +302,11 @@ export function SwitchFormField<T extends FieldValues>({
   );
 }
 
+
 interface FileUploadFormFieldProps<T extends FieldValues>
   extends BaseFieldProps<T> {
   accept?: string;
+  category?: string;
 }
 
 export function FileUploadFormField<T extends FieldValues>({
@@ -286,19 +314,38 @@ export function FileUploadFormField<T extends FieldValues>({
   name,
   label,
   accept = "image/*,.pdf",
+  category = "document",
+  className,
+  description,
 }: FileUploadFormFieldProps<T>) {
   const [fileName, setFileName] = useState<string>("");
+  const [uploading, setUploading] = useState(false);
+  const [uploadError, setUploadError] = useState<string | null>(null);
 
   const handleFile = useCallback(
-    (file: File, onChange: (value: string) => void) => {
+    async (file: File, onChange: (value: string) => void) => {
       setFileName(file.name);
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        onChange(reader.result as string);
-      };
-      reader.readAsDataURL(file);
+      setUploadError(null);
+      setUploading(true);
+
+      try {
+        const { uploadFile } = await import("@/services/storage.service");
+        const objectKey = await uploadFile(file, category);
+        onChange(objectKey);
+      } catch (err) {
+        console.error("File upload error:", err);
+        setUploadError("Upload failed. Using local file.");
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          onChange(reader.result as string);
+          setUploadError(null);
+        };
+        reader.readAsDataURL(file);
+      } finally {
+        setUploading(false);
+      }
     },
-    []
+    [category]
   );
 
   return (
@@ -306,30 +353,40 @@ export function FileUploadFormField<T extends FieldValues>({
       control={control}
       name={name}
       render={({ field }) => (
-        <FormItem>
+        <FormItem className={className}>
           <FormLabel>{label}</FormLabel>
           <FormControl>
             <div>
               <Input
                 type="file"
                 accept={accept}
+                disabled={uploading}
                 onChange={(e) => {
                   const file = e.target.files?.[0];
                   if (file) handleFile(file, field.onChange);
                 }}
               />
-              {fileName && (
+              {uploading && (
+                <p className="text-xs text-muted-foreground mt-1">
+                  Uploading...
+                </p>
+              )}
+              {fileName && !uploading && (
                 <p className="text-xs text-muted-foreground mt-1">
                   {fileName}
                 </p>
               )}
-              {field.value && !fileName && (
+              {field.value && !fileName && !uploading && (
                 <p className="text-xs text-muted-foreground mt-1">
                   File uploaded
                 </p>
               )}
+              {uploadError && (
+                <p className="text-xs text-destructive mt-1">{uploadError}</p>
+              )}
             </div>
           </FormControl>
+          {description && <FormDescription>{description}</FormDescription>}
           <FormMessage />
         </FormItem>
       )}

@@ -17,19 +17,18 @@ import {
   MONTHLY_VOLUME_RANGES,
   TAX_TYPES,
   COUNTRIES,
-  ID_TYPES,
   DOCUMENT_TYPES,
   DEFAULT_PERSON,
-  DEFAULT_IDENTIFYING_INFO,
+  REQUIRED_DOCUMENTS_BY_BUSINESS_TYPE,
 } from "@/lib/constants/onboarding";
 import {
   TextFormField,
   SelectFormField,
-  TextareaFormField,
   MultiSelectFormField,
-  SwitchFormField,
-  FileUploadFormField,
+  CheckboxFormField,
 } from "@/components/onboarding/form-fields";
+import { PersonFormFields } from "@/components/onboarding/person-form";
+import { DocumentRow } from "@/components/onboarding/document-form";
 import { Form } from "@/components/ui/form";
 import { Button } from "@/components/ui/button";
 import {
@@ -45,12 +44,19 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { Separator } from "@/components/ui/separator";
-import { Plus, Trash2 } from "lucide-react";
+import { Plus } from "lucide-react";
 import { useEffect } from "react";
 
 export default function BusinessDetailsPage() {
   const { state, setBusinessDetails, isHydrated } = useOnboarding();
   const router = useRouter();
+
+  // Guard: redirect to TOS if signedAgreementId is missing
+  useEffect(() => {
+    if (isHydrated && !state.signedAgreementId) {
+      router.replace("/onboarding/tos");
+    }
+  }, [isHydrated, state.signedAgreementId, router]);
 
   const form = useForm<BusinessDetailsFormValues>({
     resolver: zodResolver(businessDetailsSchema),
@@ -103,6 +109,26 @@ export default function BusinessDetailsPage() {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isHydrated]);
+
+  // Pre-populate required documents when business type changes
+  const businessType = form.watch("business_type");
+  useEffect(() => {
+    if (!businessType) return;
+    const required = REQUIRED_DOCUMENTS_BY_BUSINESS_TYPE[businessType] ?? [];
+    if (required.length === 0) return;
+
+    const currentDocs = form.getValues("documents");
+    const currentDocTypes = new Set(currentDocs.map((d) => d.doc_type));
+
+    const missing = required
+      .filter((dt) => !currentDocTypes.has(dt))
+      .map((dt) => ({ doc_type: dt, file: "", description: "" }));
+
+    if (missing.length > 0) {
+      form.setValue("documents", [...currentDocs, ...missing]);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [businessType]);
 
   const onSubmit = (data: BusinessDetailsFormValues) => {
     setBusinessDetails(data);
@@ -162,14 +188,12 @@ export default function BusinessDetailsPage() {
               type="url"
               placeholder="https://example.com"
             />
-            <div className="sm:col-span-2">
-              <TextareaFormField
-                control={form.control}
-                name="business_description"
-                label="Business Description"
-                placeholder="Describe your business activities..."
-              />
-            </div>
+            <TextFormField
+              control={form.control}
+              name="business_description"
+              label="Business Description"
+              placeholder="Describe your business activities..."
+            />
           </CardContent>
         </Card>
 
@@ -231,7 +255,7 @@ export default function BusinessDetailsPage() {
               placeholder="12-3456789"
             />
             <div className="flex items-end">
-              <SwitchFormField
+              <CheckboxFormField
                 control={form.control}
                 name="publicly_traded"
                 label="Publicly Traded Company"
@@ -266,7 +290,7 @@ export default function BusinessDetailsPage() {
 
         {/* Associated Persons */}
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between">
+          <CardHeader className="flex flex-row items-center justify-between flex-wrap gap-2">
             <CardTitle>Associated Persons</CardTitle>
             <Button
               type="button"
@@ -302,149 +326,13 @@ export default function BusinessDetailsPage() {
                     </div>
                   </AccordionTrigger>
                   <AccordionContent>
-                    <div className="space-y-4 pt-2">
-                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                        <TextFormField
-                          control={form.control}
-                          name={`associated_persons.${index}.first_name`}
-                          label="First Name"
-                          placeholder="John"
-                        />
-                        <TextFormField
-                          control={form.control}
-                          name={`associated_persons.${index}.middle_name`}
-                          label="Middle Name"
-                          placeholder="Michael (optional)"
-                        />
-                        <TextFormField
-                          control={form.control}
-                          name={`associated_persons.${index}.last_name`}
-                          label="Last Name"
-                          placeholder="Smith"
-                        />
-                      </div>
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <TextFormField
-                          control={form.control}
-                          name={`associated_persons.${index}.email`}
-                          label="Email"
-                          type="email"
-                          placeholder="john@example.com"
-                        />
-                        <TextFormField
-                          control={form.control}
-                          name={`associated_persons.${index}.birth_date`}
-                          label="Date of Birth"
-                          type="date"
-                        />
-                      </div>
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <SelectFormField
-                          control={form.control}
-                          name={`associated_persons.${index}.primary_nationality`}
-                          label="Nationality"
-                          options={COUNTRIES}
-                        />
-                      </div>
-
-                      <div className="flex flex-wrap gap-4">
-                        <SwitchFormField
-                          control={form.control}
-                          name={`associated_persons.${index}.has_ownership`}
-                          label="Has Ownership"
-                        />
-                        <SwitchFormField
-                          control={form.control}
-                          name={`associated_persons.${index}.has_control`}
-                          label="Has Control"
-                        />
-                        <SwitchFormField
-                          control={form.control}
-                          name={`associated_persons.${index}.is_signer`}
-                          label="Is Signer"
-                        />
-                        <SwitchFormField
-                          control={form.control}
-                          name={`associated_persons.${index}.is_director`}
-                          label="Is Director"
-                        />
-                      </div>
-
-                      {form.watch(`associated_persons.${index}.has_ownership`) && (
-                        <TextFormField
-                          control={form.control}
-                          name={`associated_persons.${index}.ownership_percentage`}
-                          label="Ownership %"
-                          type="number"
-                          placeholder="e.g. 25"
-                        />
-                      )}
-
-                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                        <SelectFormField
-                          control={form.control}
-                          name={`associated_persons.${index}.country_of_tax`}
-                          label="Tax Country"
-                          options={COUNTRIES}
-                        />
-                        <SelectFormField
-                          control={form.control}
-                          name={`associated_persons.${index}.tax_type`}
-                          label="Tax Type"
-                          options={TAX_TYPES}
-                        />
-                        <TextFormField
-                          control={form.control}
-                          name={`associated_persons.${index}.tax_id`}
-                          label="Tax ID"
-                          placeholder="Tax ID number"
-                        />
-                      </div>
-
-                      <Separator />
-
-                      {/* Identifying Information */}
-                      <PersonIdentifyingInfo
-                        control={form.control}
-                        personIndex={index}
-                      />
-
-                      <Separator />
-
-                      {/* Proof of Address */}
-                      <div className="space-y-4">
-                        <h4 className="text-sm font-medium">
-                          Proof of Address
-                        </h4>
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                          <TextFormField
-                            control={form.control}
-                            name={`associated_persons.${index}.poa_type`}
-                            label="POA Type"
-                            placeholder="e.g. Utility bill, Bank statement"
-                          />
-                          <FileUploadFormField
-                            control={form.control}
-                            name={`associated_persons.${index}.poa`}
-                            label="POA Document"
-                          />
-                        </div>
-                      </div>
-
-                      {personFields.length > 1 && (
-                        <div className="pt-2">
-                          <Button
-                            type="button"
-                            variant="destructive"
-                            size="sm"
-                            onClick={() => removePerson(index)}
-                          >
-                            <Trash2 className="w-4 h-4 mr-1" />
-                            Remove Person
-                          </Button>
-                        </div>
-                      )}
-                    </div>
+                    <PersonFormFields
+                      control={form.control}
+                      personIndex={index}
+                      onRemove={() => removePerson(index)}
+                      canRemove={personFields.length > 1}
+                      watchOwnership={form.watch(`associated_persons.${index}.has_ownership`)}
+                    />
                   </AccordionContent>
                 </AccordionItem>
               ))}
@@ -454,7 +342,7 @@ export default function BusinessDetailsPage() {
 
         {/* Documents */}
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between">
+          <CardHeader className="flex flex-row items-center justify-between flex-wrap gap-2">
             <CardTitle>Documents</CardTitle>
             <Button
               type="button"
@@ -468,139 +356,35 @@ export default function BusinessDetailsPage() {
           </CardHeader>
           <CardContent className="space-y-4">
             {docFields.length === 0 && (
-              <p className="text-sm text-slate-500 dark:text-slate-400">
+              <p className="text-sm text-muted-foreground">
                 No documents added yet. Click &quot;Add Document&quot; to
                 upload supporting documents.
               </p>
             )}
-            {docFields.map((field, index) => (
-              <div
-                key={field.id}
-                className="space-y-4 border rounded-md p-4"
-              >
-                <div className="grid grid-cols-1 sm:grid-cols-[1fr_1fr_auto] gap-4 items-end">
-                  <SelectFormField
-                    control={form.control}
-                    name={`documents.${index}.doc_type`}
-                    label="Document Type"
-                    options={DOCUMENT_TYPES}
-                  />
-                  <FileUploadFormField
-                    control={form.control}
-                    name={`documents.${index}.file`}
-                    label="File"
-                  />
-                  <Button
-                    type="button"
-                    variant="destructive"
-                    size="icon"
-                    onClick={() => removeDoc(index)}
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </Button>
-                </div>
-                <TextFormField
+            {docFields.map((field, index) => {
+              const docType = form.watch(`documents.${index}.doc_type`);
+              const requiredTypes = REQUIRED_DOCUMENTS_BY_BUSINESS_TYPE[businessType] ?? [];
+              const isRequired = requiredTypes.includes(docType);
+
+              return (
+                <DocumentRow
+                  key={field.id}
                   control={form.control}
-                  name={`documents.${index}.description`}
-                  label="Description"
-                  placeholder="e.g. Certificate of Formation"
+                  index={index}
+                  isRequired={isRequired}
+                  onRemove={() => removeDoc(index)}
                 />
-              </div>
-            ))}
+              );
+            })}
           </CardContent>
         </Card>
 
         <div className="flex justify-end">
-          <Button type="submit" size="lg" className="bg-emerald-500 hover:bg-emerald-600 text-white">
+          <Button type="submit" size="lg">
             Continue to Address Details
           </Button>
         </div>
       </form>
     </Form>
-  );
-}
-
-/** Nested identifying information array for a person */
-function PersonIdentifyingInfo({
-  control,
-  personIndex,
-}: {
-  control: BusinessDetailsFormValues extends infer T
-    ? T extends object
-      ? import("react-hook-form").Control<BusinessDetailsFormValues>
-      : never
-    : never;
-  personIndex: number;
-}) {
-  const { fields, append, remove } = useFieldArray({
-    control,
-    name: `associated_persons.${personIndex}.identifying_information` as const,
-  });
-
-  return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <h4 className="text-sm font-medium">Identifying Information</h4>
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          onClick={() => append({ ...DEFAULT_IDENTIFYING_INFO })}
-        >
-          <Plus className="w-4 h-4 mr-1" />
-          Add ID
-        </Button>
-      </div>
-      {fields.map((field, idIndex) => (
-        <div
-          key={field.id}
-          className="border rounded-md p-4 space-y-4"
-        >
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <SelectFormField
-              control={control}
-              name={`associated_persons.${personIndex}.identifying_information.${idIndex}.type`}
-              label="ID Type"
-              options={ID_TYPES}
-            />
-            <SelectFormField
-              control={control}
-              name={`associated_persons.${personIndex}.identifying_information.${idIndex}.issuing_country`}
-              label="Issuing Country"
-              options={COUNTRIES}
-            />
-            <TextFormField
-              control={control}
-              name={`associated_persons.${personIndex}.identifying_information.${idIndex}.national_identity_number`}
-              label="ID Number"
-              placeholder="ID number"
-            />
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <FileUploadFormField
-              control={control}
-              name={`associated_persons.${personIndex}.identifying_information.${idIndex}.image_front`}
-              label="Front Image"
-            />
-            <FileUploadFormField
-              control={control}
-              name={`associated_persons.${personIndex}.identifying_information.${idIndex}.image_back`}
-              label="Back Image"
-            />
-          </div>
-          {fields.length > 1 && (
-            <Button
-              type="button"
-              variant="destructive"
-              size="sm"
-              onClick={() => remove(idIndex)}
-            >
-              <Trash2 className="w-4 h-4 mr-1" />
-              Remove ID
-            </Button>
-          )}
-        </div>
-      ))}
-    </div>
   );
 }

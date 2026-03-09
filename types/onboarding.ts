@@ -96,7 +96,7 @@ export interface AddressDetailsFormData {
   person_addresses: Address[];
 }
 
-export type OnboardingStep = "business-details" | "address-details" | "tos";
+export type OnboardingStep = "tos" | "business-details" | "address-details";
 
 export interface OnboardingState {
   currentStep: OnboardingStep;

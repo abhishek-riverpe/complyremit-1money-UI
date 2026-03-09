@@ -32,7 +32,7 @@ export const associatedPersonSchema = z.object({
   identifying_information: z
     .array(identifyingInformationSchema)
     .min(1, "At least one ID is required"),
-  ownership_percentage: z.coerce.number().min(0).max(100).optional(),
+  ownership_percentage: z.number().min(0).max(100).optional(),
   country_of_tax: z.string().min(1, "Tax country is required"),
   tax_type: z.string().min(1, "Tax type is required"),
   tax_id: z.string().min(1, "Tax ID is required"),

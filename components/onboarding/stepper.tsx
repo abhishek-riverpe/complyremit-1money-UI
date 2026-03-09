@@ -25,13 +25,13 @@ export function Stepper({ currentStep, completedSteps }: StepperProps) {
                 className={cn(
                   "flex items-center justify-center w-9 h-9 rounded-full border-2 text-sm font-medium transition-colors",
                   isCompleted &&
-                    "bg-emerald-500 border-emerald-500 text-white",
+                    "bg-primary border-primary text-primary-foreground",
                   isActive &&
                     !isCompleted &&
-                    "border-emerald-500 text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/20",
+                    "border-primary text-primary-muted-foreground bg-primary-muted",
                   !isActive &&
                     !isCompleted &&
-                    "border-slate-300 dark:border-slate-600 text-slate-400 dark:text-slate-500"
+                    "border-border text-muted-foreground"
                 )}
               >
                 {isCompleted ? (
@@ -43,9 +43,9 @@ export function Stepper({ currentStep, completedSteps }: StepperProps) {
               <span
                 className={cn(
                   "text-xs font-medium hidden sm:block",
-                  isActive && "text-emerald-600 dark:text-emerald-400",
-                  isCompleted && "text-emerald-600 dark:text-emerald-400",
-                  !isActive && !isCompleted && "text-slate-400 dark:text-slate-500"
+                  isActive && "text-primary-muted-foreground",
+                  isCompleted && "text-primary-muted-foreground",
+                  !isActive && !isCompleted && "text-muted-foreground"
                 )}
               >
                 {step.label}
@@ -55,7 +55,7 @@ export function Stepper({ currentStep, completedSteps }: StepperProps) {
               <div
                 className={cn(
                   "flex-1 h-0.5 mx-3 mt-[-1.25rem] sm:mt-[-0.5rem]",
-                  isCompleted ? "bg-emerald-500" : "bg-slate-200 dark:bg-slate-700"
+                  isCompleted ? "bg-primary" : "bg-border"
                 )}
               />
             )}

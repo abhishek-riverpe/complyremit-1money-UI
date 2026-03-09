@@ -4,6 +4,17 @@ import type {
   CustomerPayload,
 } from "@/types/onboarding";
 
+function formatTaxId(taxId: string, taxType: string): string {
+  const digits = taxId.replace(/\D/g, "");
+  if (taxType === "SSN" && digits.length === 9) {
+    return `${digits.slice(0, 3)}-${digits.slice(3, 5)}-${digits.slice(5)}`;
+  }
+  if (taxType === "EIN" && digits.length === 9) {
+    return `${digits.slice(0, 2)}-${digits.slice(2)}`;
+  }
+  return taxId;
+}
+
 export function assemblePayload(
   businessDetails: BusinessDetailsFormData,
   addressDetails: AddressDetailsFormData,
@@ -11,6 +22,7 @@ export function assemblePayload(
 ): CustomerPayload {
   const persons = businessDetails.associated_persons.map((person, index) => ({
     ...person,
+    tax_id: formatTaxId(person.tax_id, person.tax_type),
     residential_address: addressDetails.person_addresses[index],
   }));
 
@@ -35,7 +47,7 @@ export function assemblePayload(
     expected_monthly_fiat_withdrawals:
       businessDetails.expected_monthly_fiat_withdrawals,
     tax_country: businessDetails.tax_country,
-    tax_id: businessDetails.tax_id,
+    tax_id: formatTaxId(businessDetails.tax_id, businessDetails.tax_type),
     tax_type: businessDetails.tax_type,
     business_registration_number: businessDetails.business_registration_number,
     primary_website: businessDetails.primary_website,

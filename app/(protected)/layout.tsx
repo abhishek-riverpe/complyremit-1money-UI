@@ -1,24 +1,24 @@
 "use client";
 
-import { ProtectedRoute } from "@/components/auth/protected-route";
 import { OnboardingProvider } from "@/components/providers/onboarding-provider";
-import { useAuth } from "@/components/providers/auth-provider";
+import { useUser, useClerk } from "@clerk/nextjs";
 import { Button } from "@/components/ui/button";
 import { LogOut } from "lucide-react";
 import type { ReactNode } from "react";
 
 function Header() {
-  const { user, signOut } = useAuth();
+  const { user } = useUser();
+  const clerk = useClerk();
 
   return (
-    <header className="border-b bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800">
+    <header className="border-b bg-card border-border">
       <div className="max-w-4xl mx-auto flex items-center justify-between px-4 h-14">
-        <span className="font-bold text-lg tracking-tight text-slate-800 dark:text-slate-100">ComplyRemit</span>
+        <span className="font-bold text-lg tracking-tight text-foreground">ComplyRemit</span>
         <div className="flex items-center gap-3">
-          <span className="text-sm text-slate-500 dark:text-slate-400 hidden sm:block">
-            {user?.email}
+          <span className="text-sm text-muted-foreground hidden sm:block">
+            {user?.emailAddresses[0]?.emailAddress}
           </span>
-          <Button variant="ghost" size="sm" onClick={signOut}>
+          <Button variant="ghost" size="sm" onClick={() => clerk.signOut({ redirectUrl: '/sign-in' })}>
             <LogOut className="w-4 h-4 mr-1.5" />
             Sign out
           </Button>
@@ -30,13 +30,11 @@ function Header() {
 
 export default function ProtectedLayout({ children }: { children: ReactNode }) {
   return (
-    <ProtectedRoute>
-      <OnboardingProvider>
-        <div className="min-h-screen bg-slate-50 dark:bg-slate-950">
-          <Header />
-          <main className="max-w-4xl mx-auto px-4 py-6">{children}</main>
-        </div>
-      </OnboardingProvider>
-    </ProtectedRoute>
+    <OnboardingProvider>
+      <div className="min-h-screen bg-background">
+        <Header />
+        <main className="max-w-4xl mx-auto px-4 py-6">{children}</main>
+      </div>
+    </OnboardingProvider>
   );
 }

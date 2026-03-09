@@ -216,6 +216,19 @@ export const DOCUMENT_TYPES = [
   },
 ] as const;
 
+/** Documents required by 1Money API per business type */
+export const REQUIRED_DOCUMENTS_BY_BUSINESS_TYPE: Record<string, string[]> = {
+  llc: ["proof_of_address", "e_signature_certificate", "shareholder_register", "registration_document", "constitutional_document"],
+  corporation: ["proof_of_address", "e_signature_certificate", "shareholder_register", "registration_document"],
+  partnership: ["proof_of_address", "e_signature_certificate", "registration_document"],
+  sole_proprietorship: ["proof_of_address", "registration_document"],
+  investment_fund: ["proof_of_address", "e_signature_certificate", "shareholder_register", "registration_document"],
+  societies: ["proof_of_address", "registration_document"],
+  trust: ["proof_of_address", "registration_document"],
+  government: ["proof_of_address", "registration_document"],
+  dao: ["proof_of_address", "registration_document"],
+};
+
 export const COUNTRIES = [
   { value: "USA", label: "United States" },
   { value: "CAN", label: "Canada" },
@@ -286,9 +299,9 @@ export const US_STATES = [
 ] as const;
 
 export const ONBOARDING_STEPS = [
-  { id: "business-details" as const, label: "Business Details", step: 1 },
-  { id: "address-details" as const, label: "Address Details", step: 2 },
-  { id: "tos" as const, label: "Terms of Service", step: 3 },
+  { id: "tos" as const, label: "Terms of Service", step: 1 },
+  { id: "business-details" as const, label: "Business Details", step: 2 },
+  { id: "address-details" as const, label: "Address Details", step: 3 },
 ] as const;
 
 export const DEFAULT_IDENTIFYING_INFO = {

@@ -15,22 +15,20 @@ export function AddressForm<T extends FieldValues>({
 }: AddressFormProps<T>) {
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-      <div className="sm:col-span-2">
-        <TextFormField
-          control={control}
-          name={`${namePrefix}.street_line_1` as Path<T>}
-          label="Street Address"
-          placeholder="123 Main Street"
-        />
-      </div>
-      <div className="sm:col-span-2">
-        <TextFormField
-          control={control}
-          name={`${namePrefix}.street_line_2` as Path<T>}
-          label="Street Line 2 (Optional)"
-          placeholder="Suite, Apt, Floor, etc."
-        />
-      </div>
+      <TextFormField
+        control={control}
+        name={`${namePrefix}.street_line_1` as Path<T>}
+        label="Street Address"
+        placeholder="123 Main Street"
+        className="sm:col-span-2"
+      />
+      <TextFormField
+        control={control}
+        name={`${namePrefix}.street_line_2` as Path<T>}
+        label="Street Line 2 (Optional)"
+        placeholder="Suite, Apt, Floor, etc."
+        className="sm:col-span-2"
+      />
       <TextFormField
         control={control}
         name={`${namePrefix}.city` as Path<T>}

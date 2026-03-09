@@ -1,8 +1,9 @@
 "use client";
 
-import { useState } from "react";
-import { useAuth } from "@/components/providers/auth-provider";
-import { useOnboarding } from "@/components/providers/onboarding-provider";
+import { useState, useEffect } from "react";
+import { useProfile } from "@/hooks/use-profile";
+import { getKybStatus } from "@/services/customer.service";
+import { StatusBadge } from "@/components/dashboard/status-badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
@@ -19,9 +20,10 @@ import {
   TrendingUp,
   Landmark,
   Link as LinkIcon,
+  Loader2,
+  AlertCircle,
 } from "lucide-react";
-import Link from "next/link";
-import type { BusinessDetailsFormData } from "@/lib/schemas/onboarding";
+import type { AssociatedPersonProfile } from "@/types/profile";
 
 const PROFILE_TABS = [
   { key: "business", label: "Business Info", icon: Building2 },
@@ -32,80 +34,14 @@ const PROFILE_TABS = [
   { key: "persons", label: "Associated Persons", icon: User },
 ] as const;
 
-const dummyBusinessDetails: BusinessDetailsFormData = {
-  business_legal_name: "Acme Corp Ltd",
-  business_description: "International payments and remittance services",
-  email: "contact@acmecorp.com",
-  business_type: "Limited Liability Company",
-  business_industry: "Financial Services",
-  business_registration_number: "REG-2024-001234",
-  date_of_incorporation: "2020-01-15",
-  primary_website: "https://acmecorp.com",
-  account_purpose: "Business payments and collections",
-  estimated_annual_revenue_usd: "$1M - $5M",
-  expected_monthly_fiat_deposits: "$100K - $500K",
-  expected_monthly_fiat_withdrawals: "$100K - $500K",
-  source_of_funds: ["Business Revenue", "Investments"],
-  source_of_wealth: ["Business Profits", "Capital Gains"],
-  tax_country: "United States",
-  tax_type: "EIN",
-  tax_id: "12-3456789",
-  publicly_traded: false,
-  documents: [
-    {
-      doc_type: "Certificate of Incorporation",
-      description: "Official certificate of incorporation document",
-    },
-  ],
-  associated_persons: [
-    {
-      first_name: "John",
-      middle_name: "",
-      last_name: "Doe",
-      email: "john.doe@acmecorp.com",
-      birth_date: "1985-06-15",
-      primary_nationality: "United States",
-      tax_id: "987-65-4321",
-      tax_type: "SSN",
-      country_of_tax: "United States",
-      is_signer: true,
-      is_director: true,
-      has_ownership: true,
-      ownership_percentage: 60,
-      has_control: true,
-      identifying_information: [
-        {
-          type: "Passport",
-          issuing_country: "United States",
-          national_identity_number: "US-PASS-123456",
-        },
-      ],
-      poa: true,
-      poa_type: "Utility Bill",
-    },
-  ],
-};
-
-const dummyAddressDetails = {
-  registered_address: {
-    street_line_1: "123 Business Avenue",
-    street_line_2: "Suite 400",
-    city: "San Francisco",
-    state: "California",
-    country: "United States",
-    postal_code: "94105",
-  },
-  person_addresses: [
-    {
-      street_line_1: "456 Residential Lane",
-      street_line_2: "",
-      city: "San Francisco",
-      state: "California",
-      country: "United States",
-      postal_code: "94102",
-    },
-  ],
-};
+function formatEnum(value: string | null | undefined): string {
+  if (!value) return "—";
+  const special: Record<string, string> = { llc: "LLC", dao: "DAO", ssn: "SSN", ein: "EIN", usd: "USD" };
+  return value
+    .split("_")
+    .map((w) => special[w.toLowerCase()] ?? w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
+    .join(" ");
+}
 
 function Field({
   icon: Icon,
@@ -117,10 +53,10 @@ function Field({
   value: string | undefined | null;
 }) {
   return (
-    <div className="flex items-center justify-between">
+    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1">
       <div className="flex items-center gap-3">
-        <Icon className="w-4 h-4 text-slate-500 dark:text-slate-400" />
-        <span className="text-xs uppercase tracking-wider text-slate-500 dark:text-slate-400">
+        <Icon className="w-4 h-4 text-muted-foreground" />
+        <span className="text-xs uppercase tracking-wider text-muted-foreground">
           {label}
         </span>
       </div>
@@ -129,61 +65,104 @@ function Field({
   );
 }
 
-function AddressBlock({ address }: { address: { street_line_1: string; street_line_2?: string; city: string; state: string; subdivision?: string; country: string; postal_code: string } }) {
+function AddressBlock({
+  streetLine1,
+  streetLine2,
+  city,
+  state,
+  country,
+  subdivision,
+  postalCode,
+}: {
+  streetLine1: string | null;
+  streetLine2?: string | null;
+  city: string | null;
+  state: string | null;
+  country: string | null;
+  subdivision?: string | null;
+  postalCode: string | null;
+}) {
+  if (!streetLine1 && !city) return <p className="text-sm text-muted-foreground">No address on file.</p>;
   return (
     <p className="text-sm">
-      {address.street_line_1}
-      {address.street_line_2 && <>, {address.street_line_2}</>}
+      {streetLine1}
+      {streetLine2 && <>, {streetLine2}</>}
       <br />
-      {address.city}, {address.state} {address.postal_code}
-      {address.subdivision && <><br />{address.subdivision}</>}
+      {city}, {state} {postalCode}
+      {subdivision && <><br />{subdivision}</>}
       <br />
-      {address.country}
+      {country}
     </p>
   );
 }
 
 export default function ProfilePage() {
-  const { user } = useAuth();
-  const { state } = useOnboarding();
+  const { profile, loading, error } = useProfile();
   const [activeTab, setActiveTab] = useState("business");
+  const [kybStatus, setKybStatus] = useState<string | null>(null);
 
-  const biz = state.businessDetails ?? dummyBusinessDetails;
-  const addr = state.addressDetails ?? dummyAddressDetails;
+  useEffect(() => {
+    getKybStatus()
+      .then((data) => setKybStatus(data?.status ?? null))
+      .catch(() => setKybStatus(null));
+  }, []);
 
-  const primaryPerson = biz.associated_persons?.[0];
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-20">
+        <Loader2 className="w-6 h-6 animate-spin text-primary" />
+        <span className="ml-2 text-sm text-muted-foreground">Loading profile...</span>
+      </div>
+    );
+  }
+
+  if (error || !profile) {
+    return (
+      <div className="flex flex-col items-center justify-center py-20 gap-2">
+        <AlertCircle className="w-6 h-6 text-destructive" />
+        <p className="text-sm text-destructive">{error ?? "Failed to load profile."}</p>
+      </div>
+    );
+  }
+
+  const primaryPerson = profile.associatedPersons?.[0];
   const displayName = primaryPerson
-    ? `${primaryPerson.first_name} ${primaryPerson.last_name}`
-    : biz.business_legal_name;
+    ? `${primaryPerson.firstName} ${primaryPerson.lastName}`
+    : profile.businessLegalName ?? "—";
 
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Profile</h1>
-        <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
+        <h1 className="text-2xl font-bold text-foreground">Profile</h1>
+        <p className="text-sm text-muted-foreground mt-1">
           Manage your account information.
         </p>
       </div>
 
       {/* Header */}
-      <Card className="rounded-2xl border-slate-200 dark:border-slate-700 shadow-sm">
+      <Card className="rounded-2xl border-border shadow-sm">
         <CardContent className="p-6">
           <div className="flex items-center gap-4">
-            <div className="w-14 h-14 rounded-full bg-emerald-50 dark:bg-emerald-900/20 flex items-center justify-center">
-              <User className="w-7 h-7 text-emerald-500 dark:text-emerald-400" />
+            <div className="w-14 h-14 rounded-full bg-primary-muted flex items-center justify-center">
+              <User className="w-7 h-7 text-primary" />
             </div>
             <div>
               <p className="font-semibold text-lg">{displayName}</p>
-              <p className="text-sm text-slate-500 dark:text-slate-400">
-                {biz.email || user?.email}
+              <p className="text-sm text-muted-foreground">
+                {profile.email}
               </p>
             </div>
+            {kybStatus && (
+              <div className="ml-auto">
+                <StatusBadge status={kybStatus} />
+              </div>
+            )}
           </div>
         </CardContent>
       </Card>
 
       {/* Tab Bar */}
-      <div className="flex gap-1 border-b border-slate-200 dark:border-slate-700 overflow-x-auto">
+      <div className="flex gap-1 border-b border-border overflow-x-auto">
         {PROFILE_TABS.map((tab) => {
           const Icon = tab.icon;
           const isActive = activeTab === tab.key;
@@ -193,8 +172,8 @@ export default function ProfilePage() {
               onClick={() => setActiveTab(tab.key)}
               className={`flex items-center gap-2 px-4 py-2.5 text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${
                 isActive
-                  ? "border-emerald-500 text-emerald-600 dark:text-emerald-400"
-                  : "border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300"
+                  ? "border-primary text-primary"
+                  : "border-transparent text-muted-foreground hover:text-foreground"
               }`}
             >
               <Icon className="w-4 h-4" />
@@ -206,171 +185,176 @@ export default function ProfilePage() {
 
       {/* Tab Content */}
       {activeTab === "business" && (
-        <Card className="rounded-2xl border-slate-200 dark:border-slate-700 shadow-sm">
+        <Card className="rounded-2xl border-border shadow-sm">
           <CardHeader>
             <CardTitle className="text-base flex items-center gap-2">
-              <Building2 className="w-4 h-4 text-emerald-500 dark:text-emerald-400" />
+              <Building2 className="w-4 h-4 text-primary" />
               Business Information
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <Field icon={Building2} label="Legal Name" value={biz.business_legal_name} />
-            <Field icon={FileText} label="Description" value={biz.business_description} />
-            <Field icon={Mail} label="Email" value={biz.email} />
-            <Field icon={FileText} label="Business Type" value={biz.business_type} />
-            <Field icon={Landmark} label="Industry" value={biz.business_industry} />
-            <Field icon={Hash} label="Registration Number" value={biz.business_registration_number} />
-            <Field icon={Calendar} label="Date of Incorporation" value={biz.date_of_incorporation} />
-            <Field icon={LinkIcon} label="Website" value={biz.primary_website} />
+            <Field icon={Building2} label="Legal Name" value={profile.businessLegalName} />
+            <Field icon={FileText} label="Description" value={profile.businessDescription} />
+            <Field icon={Mail} label="Email" value={profile.email} />
+            <Field icon={FileText} label="Business Type" value={formatEnum(profile.businessType)} />
+            <Field icon={Landmark} label="Industry" value={profile.businessIndustry} />
+            <Field icon={Hash} label="Registration Number" value={profile.businessRegistrationNumber} />
+            <Field icon={Calendar} label="Date of Incorporation" value={profile.dateOfIncorporation} />
+            <Field icon={LinkIcon} label="Website" value={profile.primaryWebsite} />
           </CardContent>
         </Card>
       )}
 
       {activeTab === "financial" && (
-        <Card className="rounded-2xl border-slate-200 dark:border-slate-700 shadow-sm">
+        <Card className="rounded-2xl border-border shadow-sm">
           <CardHeader>
             <CardTitle className="text-base flex items-center gap-2">
-              <DollarSign className="w-4 h-4 text-emerald-500 dark:text-emerald-400" />
+              <DollarSign className="w-4 h-4 text-primary" />
               Financial Information
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <Field icon={FileText} label="Account Purpose" value={biz.account_purpose} />
-            <Field icon={TrendingUp} label="Est. Annual Revenue" value={biz.estimated_annual_revenue_usd} />
-            <Field icon={DollarSign} label="Monthly Fiat Deposits" value={biz.expected_monthly_fiat_deposits} />
-            <Field icon={DollarSign} label="Monthly Fiat Withdrawals" value={biz.expected_monthly_fiat_withdrawals} />
-            <Field icon={FileText} label="Source of Funds" value={biz.source_of_funds?.join(", ")} />
-            <Field icon={FileText} label="Source of Wealth" value={biz.source_of_wealth?.join(", ")} />
+            <Field icon={FileText} label="Account Purpose" value={formatEnum(profile.accountPurpose)} />
+            <Field icon={TrendingUp} label="Est. Annual Revenue" value={profile.estimatedAnnualRevenueUsd} />
+            <Field icon={DollarSign} label="Monthly Fiat Deposits" value={profile.expectedMonthlyFiatDeposits} />
+            <Field icon={DollarSign} label="Monthly Fiat Withdrawals" value={profile.expectedMonthlyFiatWithdrawals} />
+            <Field icon={FileText} label="Source of Funds" value={profile.sourceOfFunds?.map(formatEnum).join(", ")} />
+            <Field icon={FileText} label="Source of Wealth" value={profile.sourceOfWealth?.map(formatEnum).join(", ")} />
           </CardContent>
         </Card>
       )}
 
       {activeTab === "tax" && (
-        <Card className="rounded-2xl border-slate-200 dark:border-slate-700 shadow-sm">
+        <Card className="rounded-2xl border-border shadow-sm">
           <CardHeader>
             <CardTitle className="text-base flex items-center gap-2">
-              <Landmark className="w-4 h-4 text-emerald-500 dark:text-emerald-400" />
+              <Landmark className="w-4 h-4 text-primary" />
               Tax Information
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <Field icon={Globe} label="Tax Country" value={biz.tax_country} />
-            <Field icon={FileText} label="Tax Type" value={biz.tax_type} />
-            <Field icon={Hash} label="Tax ID" value={biz.tax_id} />
-            <Field icon={FileText} label="Publicly Traded" value={biz.publicly_traded ? "Yes" : "No"} />
+            <Field icon={Globe} label="Tax Country" value={profile.taxCountry} />
+            <Field icon={FileText} label="Tax Type" value={profile.taxType} />
+            <Field icon={Hash} label="Tax ID" value={profile.taxId} />
+            <Field icon={FileText} label="Publicly Traded" value={profile.publiclyTraded ? "Yes" : "No"} />
           </CardContent>
         </Card>
       )}
 
       {activeTab === "documents" && (
-        <Card className="rounded-2xl border-slate-200 dark:border-slate-700 shadow-sm">
+        <Card className="rounded-2xl border-border shadow-sm">
           <CardHeader>
             <CardTitle className="text-base flex items-center gap-2">
-              <FileText className="w-4 h-4 text-emerald-500 dark:text-emerald-400" />
+              <FileText className="w-4 h-4 text-primary" />
               Business Documents
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            {biz.documents?.length > 0 ? (
-              biz.documents.map((doc: { doc_type: string; description: string }, i: number) => (
-                <div key={i} className="space-y-2 pl-4 border-l-2 border-slate-200 dark:border-slate-700">
-                  <Field icon={FileText} label="Document Type" value={doc.doc_type} />
+            {profile.documents?.length > 0 ? (
+              profile.documents.map((doc) => (
+                <div key={doc.id} className="space-y-2 pl-4 border-l-2 border-border">
+                  <Field icon={FileText} label="Document Type" value={formatEnum(doc.docType)} />
                   <Field icon={FileText} label="Description" value={doc.description} />
                 </div>
               ))
             ) : (
-              <p className="text-sm text-slate-500 dark:text-slate-400">No documents uploaded.</p>
+              <p className="text-sm text-muted-foreground">No documents uploaded.</p>
             )}
           </CardContent>
         </Card>
       )}
 
       {activeTab === "address" && (
-        <Card className="rounded-2xl border-slate-200 dark:border-slate-700 shadow-sm">
+        <Card className="rounded-2xl border-border shadow-sm">
           <CardHeader>
             <CardTitle className="text-base flex items-center gap-2">
-              <MapPin className="w-4 h-4 text-emerald-500 dark:text-emerald-400" />
+              <MapPin className="w-4 h-4 text-primary" />
               Registered Address
             </CardTitle>
           </CardHeader>
           <CardContent>
-            {addr?.registered_address ? (
-              <AddressBlock address={addr.registered_address} />
-            ) : (
-              <p className="text-sm text-slate-500 dark:text-slate-400">No address on file.</p>
-            )}
+            <AddressBlock
+              streetLine1={profile.registeredAddressStreetLine1}
+              streetLine2={profile.registeredAddressStreetLine2}
+              city={profile.registeredAddressCity}
+              state={profile.registeredAddressState}
+              country={profile.registeredAddressCountry}
+              subdivision={profile.registeredAddressSubdivision}
+              postalCode={profile.registeredAddressPostalCode}
+            />
           </CardContent>
         </Card>
       )}
 
       {activeTab === "persons" && (
         <div className="space-y-4">
-          {biz.associated_persons?.length > 0 ? (
-            biz.associated_persons.map((person, i) => {
-              const personAddr = addr?.person_addresses?.[i];
-              return (
-                <Card key={i} className="rounded-2xl border-slate-200 dark:border-slate-700 shadow-sm">
-                  <CardHeader>
-                    <CardTitle className="text-base">
-                      {person.first_name} {person.middle_name ? `${person.middle_name} ` : ""}{person.last_name}
-                    </CardTitle>
-                    <div className="flex gap-2 mt-1">
-                      {person.is_signer && <Badge variant="secondary">Signer</Badge>}
-                      {person.is_director && <Badge variant="secondary">Director</Badge>}
-                      {person.has_ownership && <Badge variant="secondary">Owner{person.ownership_percentage ? ` (${person.ownership_percentage}%)` : ""}</Badge>}
-                      {person.has_control && <Badge variant="secondary">Control</Badge>}
-                    </div>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <Field icon={Mail} label="Email" value={person.email} />
-                    <Field icon={Calendar} label="Date of Birth" value={person.birth_date} />
-                    <Field icon={Globe} label="Nationality" value={person.primary_nationality} />
-                    <Field icon={Hash} label="Tax ID" value={person.tax_id} />
-                    <Field icon={FileText} label="Tax Type" value={person.tax_type} />
-                    <Field icon={Globe} label="Tax Country" value={person.country_of_tax} />
-                    {person.identifying_information?.length > 0 && (
-                      <>
-                        <Separator />
-                        <p className="text-xs uppercase tracking-wider text-slate-500 dark:text-slate-400">
-                          Identifying Documents
-                        </p>
-                        {person.identifying_information.map((id: { type: string; issuing_country: string; national_identity_number: string }, j: number) => (
-                          <div key={j} className="space-y-2 pl-4 border-l-2 border-slate-200 dark:border-slate-700">
-                            <Field icon={FileText} label="ID Type" value={id.type} />
-                            <Field icon={Globe} label="Issuing Country" value={id.issuing_country} />
-                            <Field icon={Hash} label="ID Number" value={id.national_identity_number} />
-                          </div>
-                        ))}
-                      </>
-                    )}
-                    {person.poa && (
-                      <>
-                        <Separator />
-                        <Field icon={FileText} label="Proof of Address Type" value={person.poa_type} />
-                      </>
-                    )}
-                    {personAddr && (
-                      <>
-                        <Separator />
-                        <div className="flex items-start gap-3">
-                          <MapPin className="w-4 h-4 text-slate-500 dark:text-slate-400 mt-0.5" />
-                          <div>
-                            <p className="text-xs uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1">
-                              Residential Address
-                            </p>
-                            <AddressBlock address={personAddr} />
-                          </div>
+          {profile.associatedPersons?.length > 0 ? (
+            profile.associatedPersons.map((person: AssociatedPersonProfile) => (
+              <Card key={person.id} className="rounded-2xl border-border shadow-sm">
+                <CardHeader>
+                  <CardTitle className="text-base">
+                    {person.firstName} {person.middleName ? `${person.middleName} ` : ""}{person.lastName}
+                  </CardTitle>
+                  <div className="flex gap-2 mt-1">
+                    {person.isSigner && <Badge variant="secondary">Signer</Badge>}
+                    {person.isDirector && <Badge variant="secondary">Director</Badge>}
+                    {person.hasOwnership && <Badge variant="secondary">Owner{person.ownershipPercentage ? ` (${person.ownershipPercentage}%)` : ""}</Badge>}
+                    {person.hasControl && <Badge variant="secondary">Control</Badge>}
+                  </div>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <Field icon={Mail} label="Email" value={person.email} />
+                  <Field icon={Calendar} label="Date of Birth" value={person.birthDate} />
+                  <Field icon={Globe} label="Nationality" value={person.primaryNationality} />
+                  <Field icon={Hash} label="Tax ID" value={person.taxId} />
+                  <Field icon={FileText} label="Tax Type" value={person.taxType} />
+                  <Field icon={Globe} label="Tax Country" value={person.countryOfTax} />
+                  {person.identifyingDocuments?.length > 0 && (
+                    <>
+                      <Separator />
+                      <p className="text-xs uppercase tracking-wider text-muted-foreground">
+                        Identifying Documents
+                      </p>
+                      {person.identifyingDocuments.map((doc) => (
+                        <div key={doc.id} className="space-y-2 pl-4 border-l-2 border-border">
+                          <Field icon={FileText} label="ID Type" value={doc.type} />
+                          <Field icon={Globe} label="Issuing Country" value={doc.issuingCountry} />
+                          <Field icon={Hash} label="ID Number" value={doc.nationalIdentityNumber} />
                         </div>
-                      </>
-                    )}
-                  </CardContent>
-                </Card>
-              );
-            })
+                      ))}
+                    </>
+                  )}
+                  {person.poaType && (
+                    <>
+                      <Separator />
+                      <Field icon={FileText} label="Proof of Address Type" value={person.poaType} />
+                    </>
+                  )}
+                  <Separator />
+                  <div className="flex items-start gap-3">
+                    <MapPin className="w-4 h-4 text-muted-foreground mt-0.5" />
+                    <div>
+                      <p className="text-xs uppercase tracking-wider text-muted-foreground mb-1">
+                        Residential Address
+                      </p>
+                      <AddressBlock
+                        streetLine1={person.residentialAddressStreetLine1}
+                        streetLine2={person.residentialAddressStreetLine2}
+                        city={person.residentialAddressCity}
+                        state={person.residentialAddressState}
+                        country={person.residentialAddressCountry}
+                        subdivision={person.residentialAddressSubdivision}
+                        postalCode={person.residentialAddressPostalCode}
+                      />
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            ))
           ) : (
-            <Card className="rounded-2xl border-slate-200 dark:border-slate-700 shadow-sm">
+            <Card className="rounded-2xl border-border shadow-sm">
               <CardContent className="p-6">
-                <p className="text-sm text-slate-500 dark:text-slate-400">No associated persons.</p>
+                <p className="text-sm text-muted-foreground">No associated persons.</p>
               </CardContent>
             </Card>
           )}
