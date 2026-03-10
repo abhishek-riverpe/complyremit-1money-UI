@@ -42,17 +42,15 @@ export default function TosPage() {
         // Create TOS link to get session token
         const callbackUrl = window.location.origin + "/onboarding/tos/callback";
         const { session_token } = await createTosLink(callbackUrl);
-        console.log("[TOS] Session token:", session_token);
 
         // Sign TOS directly (skip hosted page)
         const { signed_agreement_id } = await signTos(session_token);
-        console.log("[TOS] Signed agreement ID:", signed_agreement_id);
 
         // Store agreement and navigate to next step
         setSignedAgreement(signed_agreement_id);
         router.replace("/onboarding/business-details");
       } catch (err) {
-        console.error("[TOS] Error during TOS initialization:", err);
+        console.error("[TOS] Error during TOS initialization:", err instanceof Error ? err.message : "Unknown error");
         const message = err instanceof Error ? err.message : String(err);
         const isApiError = message.includes("fetch") || message.includes("network") || message.includes("500") || message.includes("502");
         setError(

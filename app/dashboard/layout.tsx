@@ -11,7 +11,7 @@ import { LayoutGrid, Search, Sun, Moon, Monitor } from "lucide-react";
 import { usePathname } from "next/navigation";
 import { useUser } from "@clerk/nextjs";
 import { useTheme } from "next-themes";
-import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
+import { createContext, useContext, useMemo, useState, useSyncExternalStore, type ReactNode } from "react";
 
 const DashboardSearchContext = createContext("");
 
@@ -31,8 +31,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
   const { user } = useUser();
   const { theme, setTheme } = useTheme();
   const [searchQuery, setSearchQuery] = useState("");
-  const [mounted, setMounted] = useState(false);
-  useEffect(() => setMounted(true), []);
+  const mounted = useSyncExternalStore(() => () => {}, () => true, () => false);
 
   const { title, subtitle } = useMemo(() => {
     const meta = PAGE_META[pathname] ?? { title: "Dashboard", subtitle: "" };
@@ -55,8 +54,8 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
               <div className="flex items-center gap-2 min-w-0">
                 <SidebarTrigger className="-ml-1" />
                 <Separator orientation="vertical" className="mr-2 h-4" />
-                <LayoutGrid className="h-4 w-4 text-muted-foreground" />
-                <h1 className="text-lg font-semibold text-foreground tracking-tight">{title}</h1>
+                <LayoutGrid className="hidden sm:block h-4 w-4 text-muted-foreground" />
+                <h1 className="text-lg font-semibold text-foreground tracking-tight truncate">{title}</h1>
               </div>
               <div className="flex items-center gap-3 shrink-0">
                 <div className="relative">

@@ -146,7 +146,7 @@ export default function ProfilePage() {
       {/* Header */}
       <Card className="rounded-2xl border-border shadow-sm">
         <CardContent className="p-6">
-          <div className="flex items-center gap-4">
+          <div className="flex flex-wrap items-center gap-3 sm:gap-4">
             <div className="w-14 h-14 rounded-full bg-primary-muted flex items-center justify-center">
               <User className="w-7 h-7 text-primary" />
             </div>
@@ -168,7 +168,7 @@ export default function ProfilePage() {
               </Button>
             </div>
             {kybStatus && (
-              <div className="ml-auto">
+              <div className="sm:ml-auto">
                 <StatusBadge status={kybStatus} />
               </div>
             )}
@@ -185,14 +185,14 @@ export default function ProfilePage() {
             <button
               key={tab.key}
               onClick={() => setActiveTab(tab.key)}
-              className={`flex items-center gap-2 px-4 py-2.5 text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${
+              className={`flex items-center gap-1.5 sm:gap-2 px-2 sm:px-4 py-2.5 text-xs sm:text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${
                 isActive
                   ? "border-primary text-primary"
                   : "border-transparent text-muted-foreground hover:text-foreground"
               }`}
             >
               <Icon className="w-4 h-4" />
-              <span className="hidden sm:inline">{tab.label}</span>
+              <span>{tab.label}</span>
             </button>
           );
         })}

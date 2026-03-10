@@ -132,7 +132,7 @@ export function EditProfileDialog({
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="sm:max-w-2xl max-h-[85vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Edit Profile</DialogTitle>
           <DialogDescription>
@@ -141,7 +141,7 @@ export function EditProfileDialog({
         </DialogHeader>
 
         {/* Step indicator */}
-        <div className="flex items-center justify-center gap-3 py-2">
+        <div className="flex items-center justify-center gap-2 sm:gap-3 py-2">
           {STEPS.map((label, i) => (
             <div key={label} className="flex items-center gap-2">
               <div

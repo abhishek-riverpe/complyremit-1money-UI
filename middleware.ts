@@ -19,9 +19,12 @@ export default clerkMiddleware(async (auth, req) => {
     try {
       const { getToken } = await auth();
       const token = await getToken();
+      if (!token) {
+        return NextResponse.redirect(new URL("/sign-in", req.url));
+      }
       const res = await fetch(
         `${process.env.NEXT_PUBLIC_API_BASE_URL}/users/business`,
-        { headers: { "x-auth-token": token ?? "" } }
+        { headers: { "x-auth-token": token } }
       );
 
       if (res.status === 404) {

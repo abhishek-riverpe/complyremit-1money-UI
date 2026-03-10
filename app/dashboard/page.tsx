@@ -16,7 +16,7 @@ export default function DashboardPage() {
   return (
     <div className="space-y-6">
       {/* Summary Cards */}
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+      <div className="grid grid-cols-1 gap-3 sm:gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {/* Account Balance */}
         <Card>
           <CardContent className="flex flex-col gap-4 p-5">

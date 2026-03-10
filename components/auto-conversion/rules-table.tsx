@@ -52,7 +52,7 @@ export function RulesTable({
           Conversion Rules
         </h3>
       </CardHeader>
-      <CardContent className="px-0 pb-0">
+      <CardContent className="px-0 pb-0 overflow-x-auto">
         <Table>
           <TableHeader>
             <TableRow className="hover:bg-transparent">

@@ -23,7 +23,7 @@ export function AccountInfoCard() {
           </div>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {Array.from({ length: 4 }).map((_, i) => (
               <div key={i} className="space-y-2">
                 <Skeleton className="h-3 w-20" />
@@ -56,7 +56,7 @@ export function AccountInfoCard() {
         </div>
       </CardHeader>
       <CardContent className="space-y-4">
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <InfoItem label="Business Name" value={profile?.businessLegalName} />
           <InfoItem label="Type" value={profile?.businessType} />
           <InfoItem label="Registration #" value={profile?.businessRegistrationNumber} />

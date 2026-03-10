@@ -112,7 +112,7 @@ function SkeletonRows() {
       <TableCell>
         <div className="h-5 w-20 animate-pulse rounded-full bg-muted" />
       </TableCell>
-      <TableCell>
+      <TableCell className="hidden sm:table-cell">
         <div className="h-4 w-40 animate-pulse rounded bg-muted" />
       </TableCell>
     </TableRow>
@@ -156,16 +156,16 @@ export function ActivityTable({ searchQuery = "" }: { searchQuery?: string }) {
             {error}
           </div>
         ) : (
-          <div className="overflow-hidden w-full">
-          <Table className="table-fixed w-full">
+          <div className="overflow-x-auto w-full">
+          <Table className="w-full">
             <TableHeader>
               <TableRow className="hover:bg-transparent">
-                <TableHead className="w-[25%] hidden sm:table-cell">
+                <TableHead className="hidden sm:table-cell">
                   Date
                 </TableHead>
-                <TableHead className="w-[25%]">Action</TableHead>
-                <TableHead className="w-[25%]">Category</TableHead>
-                <TableHead className="w-[25%]">Detail</TableHead>
+                <TableHead>Action</TableHead>
+                <TableHead>Category</TableHead>
+                <TableHead className="hidden sm:table-cell">Detail</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -192,7 +192,7 @@ export function ActivityTable({ searchQuery = "" }: { searchQuery?: string }) {
                     <TableCell>
                       <CategoryBadge category={item.category} />
                     </TableCell>
-                    <TableCell className="text-sm text-muted-foreground truncate">
+                    <TableCell className="hidden sm:table-cell text-sm text-muted-foreground truncate">
                       {formatDetail(item.detail)}
                     </TableCell>
                   </TableRow>

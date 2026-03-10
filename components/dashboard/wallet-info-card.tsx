@@ -64,7 +64,7 @@ export function WalletInfoCard() {
           </Button>
         </div>
 
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <InfoItem label="Network" value={MOCK_WALLET.network} />
           <InfoItem label="Asset" value={MOCK_WALLET.asset} />
           <InfoItem label="Balance" value={`${MOCK_WALLET.balance} ${MOCK_WALLET.asset}`} />

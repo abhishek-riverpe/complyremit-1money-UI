@@ -19,12 +19,7 @@ function CallbackContent() {
     if (hasRun.current) return;
     hasRun.current = true;
 
-    // Log all callback params for debugging
-    const allParams = Object.fromEntries(searchParams.entries());
-    console.log("[TOS Callback] Search params:", allParams);
-
     if (signedAgreementId) {
-      console.log("[TOS Callback] Agreement signed:", signedAgreementId);
       setSignedAgreement(signedAgreementId);
       localStorage.removeItem("complyremit_tos_session");
       router.replace("/onboarding/business-details");
@@ -32,7 +27,6 @@ function CallbackContent() {
       console.error("[TOS Callback] Error from 1Money:", errorParam);
       setError(`Agreement signing failed: ${errorParam}`);
     } else {
-      console.warn("[TOS Callback] No signed_agreement_id or error param. Params:", allParams);
       setError("No agreement ID received. The signing may have been cancelled or failed.");
     }
   }, [signedAgreementId, errorParam, setSignedAgreement, router, searchParams]);
