@@ -30,7 +30,7 @@ export function DocumentRow({
         <SelectFormField
           control={control}
           name={`documents.${index}.doc_type`}
-          label={`Document Type${isRequired ? " (Required)" : ""}`}
+          label="Document Type"
           options={DOCUMENT_TYPES}
           disabled={isRequired}
         />
@@ -40,16 +40,16 @@ export function DocumentRow({
           label="File"
           category="business_document"
         />
-        {!isRequired && (
-          <Button
-            type="button"
-            variant="destructive"
-            size="icon"
-            onClick={onRemove}
-          >
-            <Trash2 className="w-4 h-4" />
-          </Button>
-        )}
+        <Button
+          type="button"
+          variant="destructive"
+          size="icon"
+          onClick={onRemove}
+          disabled={isRequired}
+          className={isRequired ? "opacity-50 cursor-not-allowed" : ""}
+        >
+          <Trash2 className="w-4 h-4" />
+        </Button>
       </div>
       <TextFormField
         control={control}

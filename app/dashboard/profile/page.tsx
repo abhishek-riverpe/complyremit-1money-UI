@@ -7,6 +7,8 @@ import { StatusBadge } from "@/components/dashboard/status-badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { EditProfileDialog } from "@/components/profile/edit-profile-dialog";
 import {
   User,
   Mail,
@@ -22,6 +24,7 @@ import {
   Link as LinkIcon,
   Loader2,
   AlertCircle,
+  Pencil,
 } from "lucide-react";
 import type { AssociatedPersonProfile } from "@/types/profile";
 
@@ -97,9 +100,10 @@ function AddressBlock({
 }
 
 export default function ProfilePage() {
-  const { profile, loading, error } = useProfile();
+  const { profile, loading, error, refreshProfile } = useProfile();
   const [activeTab, setActiveTab] = useState("business");
   const [kybStatus, setKybStatus] = useState<string | null>(null);
+  const [editOpen, setEditOpen] = useState(false);
 
   useEffect(() => {
     getKybStatus()
@@ -146,11 +150,22 @@ export default function ProfilePage() {
             <div className="w-14 h-14 rounded-full bg-primary-muted flex items-center justify-center">
               <User className="w-7 h-7 text-primary" />
             </div>
-            <div>
-              <p className="font-semibold text-lg">{displayName}</p>
-              <p className="text-sm text-muted-foreground">
-                {profile.email}
-              </p>
+            <div className="flex items-center gap-2">
+              <div>
+                <p className="font-semibold text-lg">{displayName}</p>
+                <p className="text-sm text-muted-foreground">
+                  {profile.email}
+                </p>
+              </div>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8"
+                onClick={() => setEditOpen(true)}
+              >
+                <Pencil className="w-4 h-4" />
+                <span className="sr-only">Edit profile</span>
+              </Button>
             </div>
             {kybStatus && (
               <div className="ml-auto">
@@ -360,6 +375,13 @@ export default function ProfilePage() {
           )}
         </div>
       )}
+
+      <EditProfileDialog
+        open={editOpen}
+        onOpenChange={setEditOpen}
+        profile={profile}
+        onSuccess={refreshProfile}
+      />
     </div>
   );
 }

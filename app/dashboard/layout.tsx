@@ -1,6 +1,5 @@
 "use client";
 
-import { OnboardingProvider } from "@/components/providers/onboarding-provider";
 import { AppSidebar } from "@/components/sidebar/app-sidebar";
 import {
   SidebarProvider,
@@ -48,8 +47,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
   }, [pathname, user]);
 
   return (
-    <OnboardingProvider>
-      <DashboardSearchContext.Provider value={searchQuery}>
+    <DashboardSearchContext.Provider value={searchQuery}>
         <SidebarProvider>
           <AppSidebar />
           <SidebarInset>
@@ -101,7 +99,6 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
             </div>
           </SidebarInset>
         </SidebarProvider>
-      </DashboardSearchContext.Provider>
-    </OnboardingProvider>
+    </DashboardSearchContext.Provider>
   );
 }

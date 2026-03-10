@@ -6,14 +6,12 @@ import { Button } from "@/components/ui/button";
 import { useAutoConversionRules } from "@/hooks/use-auto-conversion-rules";
 import { RulesTable } from "@/components/auto-conversion/rules-table";
 import { CreateRuleDialog } from "@/components/auto-conversion/create-rule-dialog";
-import { RuleOrdersSheet } from "@/components/auto-conversion/rule-orders-sheet";
 import { toast } from "sonner";
 
 export default function AutoConversionPage() {
   const { rules, loading, error, refetch, removeRule } =
     useAutoConversionRules();
   const [createOpen, setCreateOpen] = useState(false);
-  const [ordersRuleId, setOrdersRuleId] = useState<string | null>(null);
 
   async function handleDelete(ruleId: string) {
     try {
@@ -53,7 +51,6 @@ export default function AutoConversionPage() {
         rules={rules}
         loading={loading}
         onDelete={handleDelete}
-        onViewOrders={(id) => setOrdersRuleId(id)}
       />
 
       <CreateRuleDialog
@@ -62,13 +59,6 @@ export default function AutoConversionPage() {
         onSuccess={refetch}
       />
 
-      <RuleOrdersSheet
-        ruleId={ordersRuleId}
-        open={!!ordersRuleId}
-        onOpenChange={(open) => {
-          if (!open) setOrdersRuleId(null);
-        }}
-      />
     </div>
   );
 }

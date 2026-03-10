@@ -1,6 +1,6 @@
 "use client";
 
-import { Trash2, Eye } from "lucide-react";
+import { Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import {
@@ -18,14 +18,12 @@ import { useState } from "react";
 interface RulesTableProps {
   rules: AutoConversionRuleResponse[];
   onDelete: (ruleId: string) => void;
-  onViewOrders: (ruleId: string) => void;
   loading: boolean;
 }
 
 export function RulesTable({
   rules,
   onDelete,
-  onViewOrders,
   loading,
 }: RulesTableProps) {
   const [confirmId, setConfirmId] = useState<string | null>(null);
@@ -104,14 +102,6 @@ export function RulesTable({
                   </TableCell>
                   <TableCell className="pr-6 text-right">
                     <div className="flex items-center justify-end gap-1">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-8 w-8"
-                        onClick={() => onViewOrders(rule.auto_conversion_rule_id)}
-                      >
-                        <Eye className="h-4 w-4" />
-                      </Button>
                       {confirmId === rule.auto_conversion_rule_id ? (
                         <Button
                           variant="destructive"

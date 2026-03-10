@@ -96,6 +96,22 @@ export interface AddressDetailsFormData {
   person_addresses: Address[];
 }
 
+export interface UpdateCustomerPayload {
+  email?: string;
+  business_legal_name?: string;
+  business_description?: string;
+  business_type?: string;
+  business_industry?: string;
+  business_registration_number?: string;
+  date_of_incorporation?: string;
+  registered_address?: Partial<Address>;
+  primary_website?: string;
+  publicly_traded?: boolean;
+  tax_id?: string;
+  tax_type?: string;
+  tax_country?: string;
+}
+
 export type OnboardingStep = "tos" | "business-details" | "address-details";
 
 export interface OnboardingState {

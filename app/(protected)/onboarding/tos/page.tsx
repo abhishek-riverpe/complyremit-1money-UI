@@ -9,7 +9,7 @@ import { Loader2, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 export default function TosPage() {
-  const { state, isHydrated, setSignedAgreement } = useOnboarding();
+  const { state, isHydrated, setSignedAgreement, reset } = useOnboarding();
   const router = useRouter();
   const hasRun = useRef(false);
   const [error, setError] = useState<string | null>(null);
@@ -26,13 +26,16 @@ export default function TosPage() {
 
     async function initTos() {
       try {
+        // Clear any stale onboarding state from previous session
+        reset();
+
         // Create user in backend (409 = already exists, that's fine)
         try {
           await createUser();
-        } catch (err) {
-          const message = err instanceof Error ? err.message : "";
-          if (!message.includes("already exists") && !message.includes("409")) {
-            throw err;
+        } catch (err: unknown) {
+          const msg = err instanceof Error ? err.message : "";
+          if (!msg.toLowerCase().includes("already exists")) {
+            throw new Error("Failed to create your account. Please try again.");
           }
         }
 

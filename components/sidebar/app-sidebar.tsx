@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { LayoutDashboard, User, Settings, LogOut, RefreshCw } from "lucide-react";
 import { useUser, useClerk } from "@clerk/nextjs";
+import { signOutAndClear } from "@/lib/sign-out";
 import {
   Sidebar,
   SidebarContent,
@@ -98,7 +99,7 @@ export function AppSidebar() {
           </SidebarMenuItem>
           <SidebarMenuItem>
             <SidebarMenuButton
-              onClick={() => clerk.signOut({ redirectUrl: '/sign-in' })}
+              onClick={() => signOutAndClear(clerk)}
               tooltip="Sign Out"
               className="text-sidebar-foreground/60 hover:text-destructive hover:bg-destructive/10"
             >

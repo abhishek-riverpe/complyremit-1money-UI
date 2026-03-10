@@ -4,6 +4,7 @@ import { OnboardingProvider } from "@/components/providers/onboarding-provider";
 import { useUser, useClerk } from "@clerk/nextjs";
 import { Button } from "@/components/ui/button";
 import { LogOut } from "lucide-react";
+import { signOutAndClear } from "@/lib/sign-out";
 import type { ReactNode } from "react";
 
 function Header() {
@@ -18,7 +19,7 @@ function Header() {
           <span className="text-sm text-muted-foreground hidden sm:block">
             {user?.emailAddresses[0]?.emailAddress}
           </span>
-          <Button variant="ghost" size="sm" onClick={() => clerk.signOut({ redirectUrl: '/sign-in' })}>
+          <Button variant="ghost" size="sm" onClick={() => signOutAndClear(clerk)}>
             <LogOut className="w-4 h-4 mr-1.5" />
             Sign out
           </Button>
